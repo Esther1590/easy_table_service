@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///easy_table_service.db'
+app.config['SECRET_KEY'] = 'your_secret_key'
 db = SQLAlchemy(app)
 
 # Import models after initializing the db
