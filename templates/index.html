@@ -3,9 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Easy Table Service</title>
+    <title>EasyTableService</title>
 </head>
 <body>
-    <h1>Welcome to Easy Table Service</h1>
+    <h1>Welcome to EasyTableService</h1>
+    <form id="menu-form">
+        <h2>Add Menu Item</h2>
+        <input type="text" id="item_name" placeholder="Item Name" required>
+        <input type="text" id="description" placeholder="Description" required>
+        <input type="number" id="price" placeholder="Price" step="0.01" required>
+        <button type="submit">Add Item</button>
+    </form>
+    <h2>Menu Items</h2>
+    <ul id="menu-list"></ul>
+
+    <script>
+        document.getElementById('menu-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const item_name = document.getElementById('item_name').value;
+            const description = document.getElementById('description').value;
+            const price = document.getElementById('price').value;
+
+            const response = await fetch('/menu', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ item_name, description, price })
+            });
+
+            if (response.ok) {
+                alert('Menu item added');
+                loadMenuItems();
+            } else {
+                alert('Error adding menu item');
+            }
+        });
+
+        async function loadMenuItems() {
+            const response = await fetch('/menu');
+            const menuItems = await response.json();
+            const menuList = document.getElementById('menu-list');
+            menuList.innerHTML = '';
+            menuItems.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${item.item_name} - ${item.description} - $${item.price}`;
+                menuList.appendChild(listItem);
+            });
+        }
+
+        window.onload = loadMenuItems;
+    </script>
 </body>
 </html>

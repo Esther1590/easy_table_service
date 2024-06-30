@@ -6,12 +6,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///easy_table_service.db'
 app.config['SECRET_KEY'] = 'your_secret_key'
 db = SQLAlchemy(app)
 
-# Import models after initializing the db
 from models import User, Menu, Order, Payment
 
+@app.before_request
 def create_tables():
-    with app.app_context():
-        db.create_all()
+    db.create_all()
 
 @app.route('/')
 def home():
@@ -48,6 +47,4 @@ def process_payment():
     return jsonify({'message': 'Payment processed'}), 201
 
 if __name__ == '__main__':
-    create_tables()
     app.run(debug=True)
-
