@@ -4,55 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EasyTableService</title>
+    <style>
+        .menu-item {
+            margin-bottom: 15px;
+        }
+        .menu-item button {
+            margin-left: 10px;
+        }
+        .order-item {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <h1>Welcome to EasyTableService</h1>
-    <form id="menu-form">
-        <h2>Add Menu Item</h2>
-        <input type="text" id="item_name" placeholder="Item Name" required>
-        <input type="text" id="description" placeholder="Description" required>
-        <input type="number" id="price" placeholder="Price" step="0.01" required>
-        <button type="submit">Add Item</button>
-    </form>
     <h2>Menu Items</h2>
-    <ul id="menu-list"></ul>
+    <div id="menu-list">Loading menu items...</div>
+    <h2>Your Order</h2>
+    <div id="order-list"></div>
+    <button onclick="placeOrder()">Place Order</button>
+    <button onclick="makePayment()">Make Payment</button>
 
     <script>
-        document.getElementById('menu-form').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const item_name = document.getElementById('item_name').value;
-            const description = document.getElementById('description').value;
-            const price = document.getElementById('price').value;
+        let order = [];
 
-            const response = await fetch('/menu', {
+        document.addEventListener('DOMContentLoaded', (event) => {
+            loadMenuItems();
+        });
+
+        async function loadMenuItems() {
+            try {
+                const response = await fetch('/menu');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                const menuItems = await response.json();
+                const menuList = document.getElementById('menu-list');
+                menuList.innerHTML = '';
+                menuItems.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'menu-item';
+                    itemDiv.innerHTML = `
+                        ${item.item_name} - ${item.description} - $${item.price}
+                        <button onclick="addToOrder(${item.id}, '${item.item_name}', ${item.price})">Add to Order</button>
+                    `;
+                    menuList.appendChild(itemDiv);
+                });
+            } catch (error) {
+                document.getElementById('menu-list').innerText = 'Failed to load menu items: ' + error.message;
+            }
+        }
+
+        function addToOrder(id, name, price) {
+            const orderList = document.getElementById('order-list');
+            order.push({id, name, price});
+            const orderItemDiv = document.createElement('div');
+            orderItemDiv.className = 'order-item';
+            orderItemDiv.innerHTML = `
+                ${name} - $${price}
+            `;
+            orderList.appendChild(orderItemDiv);
+        }
+
+        async function placeOrder() {
+            const totalAmount = order.reduce((total, item) => total + item.price, 0);
+            const userId = 1; // You may need to get the actual user ID from your authentication system
+            const response = await fetch('/order', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ item_name, description, price })
+                body: JSON.stringify({ user_id: userId, total_amount: totalAmount })
             });
 
             if (response.ok) {
-                alert('Menu item added');
-                loadMenuItems();
+                alert('Order placed successfully');
+                order = [];
+                document.getElementById('order-list').innerHTML = '';
             } else {
-                alert('Error adding menu item');
+                alert('Error placing order');
             }
-        });
-
-        async function loadMenuItems() {
-            const response = await fetch('/menu');
-            const menuItems = await response.json();
-            const menuList = document.getElementById('menu-list');
-            menuList.innerHTML = '';
-            menuItems.forEach(item => {
-                const listItem = document.createElement('li');
-                listItem.textContent = `${item.item_name} - ${item.description} - $${item.price}`;
-                menuList.appendChild(listItem);
-            });
         }
 
-        window.onload = loadMenuItems;
+        async function makePayment() {
+            const orderId = 1; // You need to get the actual order ID after placing an order
+            const totalAmount = order.reduce((total, item) => total + item.price, 0);
+            const paymentMethod = 'Credit Card'; // You can provide options for different payment methods
+            const response = await fetch('/payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ order_id: orderId, amount: totalAmount, payment_method: paymentMethod })
+            });
+
+            if (response.ok) {
+                alert('Payment processed successfully');
+            } else {
+                alert('Error processing payment');
+            }
+        }
     </script>
 </body>
 </html>

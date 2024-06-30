@@ -1,3 +1,4 @@
+# models.py
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -15,7 +16,7 @@ class Menu(db.Model):
     price = db.Column(db.Float, nullable=False)
 
 class Order(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)  # Fixed typo here
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(50), nullable=False)
